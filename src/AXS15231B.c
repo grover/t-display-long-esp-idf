@@ -12,8 +12,6 @@
 
 #include <freertos/task.h>
 
-static const char *TAG = "lcd_panel.axs15231b";
-
 static volatile bool lcd_spi_dma_write = false;
 extern void my_print(const char *buf);
 uint32_t transfer_num = 0;
@@ -197,8 +195,8 @@ void lcd_setRotation(uint8_t r)
 void lcd_address_set(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2)
 {
     lcd_cmd_t t[3] = {
-        {0x2a, {(uint8_t)(x1 >> 8), (uint8_t)x1, (uint8_t)(x2 >> 8), (uint8_t)(x2)}, 0x04},
-        {0x2b, {(uint8_t)(y1 >> 8), (uint8_t)(y1), (uint8_t)(y2 >> 8), (uint8_t)(y2)}, 0x04},
+        { 0x2a, {(uint8_t)(x1 >> 8), (uint8_t)x1, (uint8_t)(x2 >> 8), (uint8_t)(x2)}, 0x04, 0},
+        { 0x2b, {(uint8_t)(y1 >> 8), (uint8_t)(y1), (uint8_t)(y2 >> 8), (uint8_t)(y2)}, 0x04, 0},
     };
 
     for (uint32_t i = 0; i < 2; i++) {
