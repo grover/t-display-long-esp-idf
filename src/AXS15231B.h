@@ -4,6 +4,10 @@
 #include "pins_config.h"
 #include "lvgl.h"/* https://github.com/lvgl/lvgl.git */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define TFT_MADCTL 0x36
 #define TFT_MAD_MY 0x80
 #define TFT_MAD_MX 0x40
@@ -40,7 +44,11 @@ void lcd_PushColors(uint16_t x,
                     uint16_t width,
                     uint16_t high,
                     uint16_t *data);
-void lcd_PushColors(uint16_t *data, uint32_t len);
+void lcd_flush(uint16_t *data, uint32_t len);
 void lcd_sleep();
 
 bool get_lcd_spi_dma_write(void);
+
+#ifdef __cplusplus
+}
+#endif

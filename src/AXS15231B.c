@@ -197,7 +197,7 @@ void lcd_setRotation(uint8_t r)
 void lcd_address_set(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2)
 {
     lcd_cmd_t t[3] = {
-        {0x2a, {(uint8_t)(x1 >> 8), (uint8_t)x1, uint8_t(x2 >> 8), (uint8_t)(x2)}, 0x04},
+        {0x2a, {(uint8_t)(x1 >> 8), (uint8_t)x1, (uint8_t)(x2 >> 8), (uint8_t)(x2)}, 0x04},
         {0x2b, {(uint8_t)(y1 >> 8), (uint8_t)(y1), (uint8_t)(y2 >> 8), (uint8_t)(y2)}, 0x04},
     };
 
@@ -229,7 +229,7 @@ void lcd_fill(uint16_t xsta,
 void lcd_DrawPoint(uint16_t x, uint16_t y, uint16_t color)
 {
     lcd_address_set(x, y, x + 1, y + 1);
-    lcd_PushColors(&color, 1);
+    lcd_flush(&color, 1);
 }
 
 void spi_device_queue_trans_fun(spi_device_handle_t handle, spi_transaction_t *trans_desc, TickType_t ticks_to_wait)
@@ -245,13 +245,13 @@ void lcd_PushColors(uint16_t x,
                         uint16_t *data)
     {
         static bool first_send = 1;
-        static uint16_t *p = (uint16_t *)data;
+        const uint16_t *p = (uint16_t *)data;
         static uint32_t transfer_num_old = 0;
 
         if(data != NULL && (width != 0) && (high != 0))
         {
             lcd_PushColors_len = width * high;
-            p = (uint16_t *)data;
+            p = data;
             first_send = 1;
 
             transfer_num = 0;
@@ -310,7 +310,7 @@ void lcd_PushColors(uint16_t x,
         } while (lcd_PushColors_len > 0);
     }
 
-void lcd_PushColors(uint16_t *data, uint32_t len)
+void lcd_flush(uint16_t *data, uint32_t len)
 {
     bool first_send = 1;
     uint16_t *p = (uint16_t *)data;
