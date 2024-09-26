@@ -55,26 +55,6 @@ bool get_lcd_spi_dma_write(void)
 
 static spi_device_handle_t spi;
 
-static void WriteComm(uint8_t data)
-{
-    TFT_CS_L;
-    SPI.beginTransaction(SPISettings(SPI_FREQUENCY, MSBFIRST, TFT_SPI_MODE));
-    SPI.write(0x00);
-    SPI.write(data);
-    SPI.write(0x00);
-    SPI.endTransaction();
-    TFT_CS_H;
-}
-
-static void WriteData(uint8_t data)
-{
-    TFT_CS_L;
-    SPI.beginTransaction(SPISettings(SPI_FREQUENCY, MSBFIRST, TFT_SPI_MODE));
-    SPI.write(data);
-    SPI.endTransaction();
-    TFT_CS_H;
-}
-
 static void lcd_send_cmd(uint32_t cmd, uint8_t *dat, uint32_t len)
 {
     TFT_CS_L;
