@@ -19,14 +19,6 @@
 #define TFT_INVOFF 0x20
 #define TFT_INVON 0x21
 
-#define TFT_SCK_H digitalWrite(TFT_SCK, 1);
-#define TFT_SCK_L digitalWrite(TFT_SCK, 0);
-#define TFT_SDA_H digitalWrite(TFT_MOSI, 1);
-#define TFT_SDA_L digitalWrite(TFT_MOSI, 0);
-
-#define TFT_DC_H digitalWrite(TFT_DC, 1);
-#define TFT_DC_L digitalWrite(TFT_DC, 0);
-
 // #define TFT_CS_H digitalWrite(TFT_QSPI_CS, 1);
 // #define TFT_CS_L digitalWrite(TFT_QSPI_CS, 0);
 

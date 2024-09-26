@@ -2,13 +2,15 @@
 #include "axs15231b_commands.h"
 
 #include "AXS15231B.h"
-#include "Arduino.h"
 
-#include "driver/gpio.h"
-#include "driver/spi_master.h"
+#include <driver/gpio.h>
+#include <driver/spi_master.h>
 
-#include "esp_log.h"
-#include "esp_check.h"
+#include <esp_log.h>
+#include <esp_check.h>
+#include <esp_heap_caps.h>
+
+#include <freertos/task.h>
 
 static const char *TAG = "lcd_panel.axs15231b";
 
@@ -85,21 +87,6 @@ static void IRAM_ATTR spi_dma_cd(spi_transaction_t *trans)
             TFT_CS_H;
         }
     }
-}
-
-
-void lcd_send_data8(uint8_t dat) {
-	unsigned char i;
-	for (i = 0; i < 8; i++) {
-		if (dat & 0x80) {
-		digitalWrite(TFT_QSPI_D0, 1);
-		} else {
-		digitalWrite(TFT_QSPI_D0, 0);
-		}
-		dat <<= 1;
-		digitalWrite(TFT_QSPI_SCK, 0);
-		digitalWrite(TFT_QSPI_SCK, HIGH);
-	}
 }
 
 void _axs15231_init_pins() {
@@ -283,7 +270,7 @@ void lcd_PushColors(uint16_t x,
         transfer_num_old -= (transfer_num_old - (transfer_num_old-(transfer_num_old-transfer_num)));
 
         do {
-            if(transfer_num >= 3 || ESP.getFreeHeap() <= 70000)
+            if(transfer_num >= 3 || heap_caps_get_free_size(MALLOC_CAP_INTERNAL) <= 70000)
             {
                 break;
             }
