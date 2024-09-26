@@ -133,14 +133,20 @@ void lcd_send_data8(uint8_t dat) {
 	}
 }
 
-static esp_err_t esp_lcd_gpio_conf(int gpio_num) {
-    gpio_config_t io_conf = {
-        .pin_bit_mask = 1ULL << gpio_num,
-        .mode = GPIO_MODE_OUTPUT,
+void _axs15231_init_pins() {
+    const uint64_t outputPins 
+        = (1ULL << TFT_QSPI_CS) 
+        | (1ULL << TFT_QSPI_RST);
+
+    gpio_config_t conf = {
+        .pin_bit_mask = outputPins,              /*!< GPIO pin: set with bit mask, each bit maps to a GPIO */
+        .mode = GPIO_MODE_OUTPUT,                  /*!< GPIO mode: set input/output mode                     */
+        .pull_up_en = GPIO_PULLUP_DISABLE,          /*!< GPIO pull-up                                         */
+        .pull_down_en = GPIO_PULLDOWN_DISABLE,      /*!< GPIO pull-down                                       */
+        .intr_type = GPIO_INTR_DISABLE              /*!< GPIO interrupt type - previously set                 */
     };
 
-    ESP_RETURN_ON_ERROR(gpio_config(&io_conf), TAG, "Failed to configure GPIO %d", gpio_num);
-    return ESP_OK;
+    ESP_ERROR_CHECK(gpio_config(&conf));
 }
 
 
@@ -164,10 +170,10 @@ static esp_err_t panel_axs15231b_reset()
 
     return ESP_OK;
 }
+
 void axs15231_init(void)
 {
-    esp_lcd_gpio_conf(TFT_QSPI_CS);
-    esp_lcd_gpio_conf(TFT_QSPI_RST);
+    _axs15231_init_pins();
 
     panel_axs15231b_reset();
 
