@@ -38,6 +38,7 @@ typedef struct
     uint8_t cmd;
     uint8_t data[36];
     uint8_t len;
+    uint32_t sleepTimeInMilliseconds;
 } lcd_cmd_t;
 
 void axs15231_init(void);
