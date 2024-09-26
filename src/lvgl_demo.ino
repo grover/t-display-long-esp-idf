@@ -2,45 +2,22 @@
 #include "AXS15231B.h"
 
 #include "backlight.h"
+#include "axs_touch.h"
 
-#include <Arduino.h>
-#include <Wire.h>
+#include <FreeRTOS.h>
+#include <freertos/task.h>
+#include <esp_log.h>
 
 //================================
 //If you turn on software rotation(disp_drv.sw_rotate = 1), Do not update or replace LVGL.
 //disp_drv.full_refresh must be 1
 //================================
 
+const char *TAG = "lvgl_demo.ino";
+
 static lv_disp_draw_buf_t draw_buf;
 static lv_color_t *buf;
 static lv_color_t *buf1;
-
-uint8_t ALS_ADDRESS = 0x3B;
-#define TOUCH_IICSCL 10
-#define TOUCH_IICSDA 15
-#define TOUCH_INT 11
-#define TOUCH_RES 16
-
-#define AXS_TOUCH_ONE_POINT_LEN             6
-#define AXS_TOUCH_BUF_HEAD_LEN              2
-
-#define AXS_TOUCH_GESTURE_POS               0
-#define AXS_TOUCH_POINT_NUM                 1
-#define AXS_TOUCH_EVENT_POS                 2
-#define AXS_TOUCH_X_H_POS                   2
-#define AXS_TOUCH_X_L_POS                   3
-#define AXS_TOUCH_ID_POS                    4
-#define AXS_TOUCH_Y_H_POS                   4
-#define AXS_TOUCH_Y_L_POS                   5
-#define AXS_TOUCH_WEIGHT_POS                6
-#define AXS_TOUCH_AREA_POS                  7
-
-#define AXS_GET_POINT_NUM(buf) buf[AXS_TOUCH_POINT_NUM]
-#define AXS_GET_GESTURE_TYPE(buf)  buf[AXS_TOUCH_GESTURE_POS]
-#define AXS_GET_POINT_X(buf,point_index) (((uint16_t)(buf[AXS_TOUCH_ONE_POINT_LEN*point_index+AXS_TOUCH_X_H_POS] & 0x0F) <<8) + (uint16_t)buf[AXS_TOUCH_ONE_POINT_LEN*point_index+AXS_TOUCH_X_L_POS])
-#define AXS_GET_POINT_Y(buf,point_index) (((uint16_t)(buf[AXS_TOUCH_ONE_POINT_LEN*point_index+AXS_TOUCH_Y_H_POS] & 0x0F) <<8) + (uint16_t)buf[AXS_TOUCH_ONE_POINT_LEN*point_index+AXS_TOUCH_Y_L_POS])
-#define AXS_GET_POINT_EVENT(buf,point_index) (buf[AXS_TOUCH_ONE_POINT_LEN*point_index+AXS_TOUCH_EVENT_POS] >> 6)
-
 
 lv_obj_t *ui_cartext = NULL;
 
@@ -59,39 +36,28 @@ void my_disp_flush(lv_disp_drv_t *disp, const lv_area_t *area,
     lcd_PushColors(area->x1, area->y1, w, h, (uint16_t *)&color_p->full);
 }
 
-uint8_t read_touchpad_cmd[11] = {0xb5, 0xab, 0xa5, 0x5a, 0x0, 0x0, 0x0, 0x8};
 void my_touchpad_read(lv_indev_drv_t *indev_driver, lv_indev_data_t *data) {
-    uint8_t buff[20] = {0};
+    touch_input_t input = { 0 };
 
-    Wire.beginTransmission(0x3B);
-    Wire.write(read_touchpad_cmd, 8);
-    Wire.endTransmission();
-    Wire.requestFrom(0x3B, 8);
-    while (!Wire.available());
-    Wire.readBytes(buff, 8);
+    if (touch_read_input(&input) != ESP_OK) {
+        data->state = LV_INDEV_STATE_RELEASED;
+        return;
+    }
 
-    uint16_t pointX;
-    uint16_t pointY;
-    uint16_t type = 0;
-
-    type = AXS_GET_GESTURE_TYPE(buff);
-    pointX = AXS_GET_POINT_X(buff,0);
-    pointY = AXS_GET_POINT_Y(buff,0);
-
-    if (!type && (pointX || pointY)) {
-        pointX = (640-pointX);
-        if(pointX > 640) pointX = 640;
-        if(pointY > 180) pointY = 180;
-        data->state = LV_INDEV_STATE_PR;
-        data->point.x = pointY;
-        data->point.y = pointX;
+    if (!input.gesture) {
+        input.x = (640-input.x);
+        if(input.x > 640) input.x = 640;
+        if(input.y > 180) input.y = 180;
+        data->state = LV_INDEV_STATE_PRESSED;
+        data->point.x = input.y;
+        data->point.y = input.x;
 
         char buf[20] = {0};
         sprintf(buf, "(%d, %d)", data->point.x, data->point.y);
         if(ui_cartext != NULL)
         lv_label_set_text(ui_cartext, buf);
 
-        Serial.println(buf);
+        ESP_LOGI(TAG, buf);
     }
     else {
         data->state = LV_INDEV_STATE_REL;
@@ -132,16 +98,9 @@ void demo_animation(void) {
 
 bool result = false;
 void setup() {
-    Serial.begin(115200);
-    Serial.println("sta\n");
+    ESP_LOGI(TAG, "sta\n");
 
-    pinMode(TOUCH_RES, OUTPUT);
-    digitalWrite(TOUCH_RES, HIGH);delay(2);
-    digitalWrite(TOUCH_RES, LOW);delay(10);
-    digitalWrite(TOUCH_RES, HIGH);delay(2);
-
-    Wire.begin(TOUCH_IICSDA, TOUCH_IICSCL);
-
+    touch_init();
     backlight_init();
     backlight_enable(true);
 
@@ -150,19 +109,19 @@ void setup() {
     lv_init();
     size_t buffer_size =
         sizeof(lv_color_t) * EXAMPLE_LCD_H_RES * EXAMPLE_LCD_V_RES;
-    buf = (lv_color_t *)ps_malloc(buffer_size);
+    buf = (lv_color_t *)heap_caps_malloc(buffer_size, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
     if (buf == NULL) {
       while (1) {
-        Serial.println("buf NULL");
-        delay(500);
+        ESP_LOGE(TAG, "Failed to allocate first display buffer");
+        vTaskDelay(500 / portTICK_PERIOD_MS);
       }
     }
 
-    buf1 = (lv_color_t *)ps_malloc(buffer_size);
+    buf1 = (lv_color_t *)heap_caps_malloc(buffer_size, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
     if (buf1 == NULL) {
       while (1) {
-        Serial.println("buf NULL");
-        delay(500);
+        ESP_LOGE(TAG, "Failed to allocate second display buffer");
+        vTaskDelay(500 / portTICK_PERIOD_MS);
       }
     }
 
@@ -193,13 +152,14 @@ void setup() {
 
     demo_animation();
 
-    Serial.println("end\n");
+    ESP_LOGI(TAG, "end\n");
 }
 
 extern uint32_t transfer_num;
 extern size_t lcd_PushColors_len;
 void loop() {
-    delay(1);
+    vTaskDelay(1 / portTICK_PERIOD_MS);
+
     if (transfer_num <= 0 && lcd_PushColors_len <= 0)
         lv_timer_handler();
 
