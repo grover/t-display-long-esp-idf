@@ -149,24 +149,18 @@ void _axs15231_init_pins() {
     ESP_ERROR_CHECK(gpio_config(&conf));
 }
 
+void _cpu_sleep(uint32_t sleepDurationInMilliseconds) {
+    vTaskDelay(sleepDurationInMilliseconds / portTICK_PERIOD_MS);
+}
 
-static esp_err_t panel_axs15231b_reset()
+static esp_err_t _axs15231_hardware_reset(void)
 {
-    // axs15231b_panel_t *axs15231b = __containerof(panel, axs15231b_panel_t, base);
-    // esp_lcd_panel_io_handle_t io = axs15231b->io;
-
-    // perform hardware reset
-    // if (axs15231b->reset_gpio_num >= 0) {
-        gpio_set_level(TFT_QSPI_RST, 1);
-        vTaskDelay(pdMS_TO_TICKS(130));
-        gpio_set_level(TFT_QSPI_RST, 0);
-        vTaskDelay(pdMS_TO_TICKS(130));
-        gpio_set_level(TFT_QSPI_RST, 1);
-        vTaskDelay(pdMS_TO_TICKS(300));
-    // } else { // perform software reset
-    //     tx_param(axs15231b, io, LCD_CMD_SWRESET, NULL, 0);
-    //     vTaskDelay(pdMS_TO_TICKS(120)); // spec, wait at least 5m before sending new command
-    // }
+    ESP_ERROR_CHECK(gpio_set_level(TFT_QSPI_RST, 1));
+    _cpu_sleep(130);
+    ESP_ERROR_CHECK(gpio_set_level(TFT_QSPI_RST, 0));
+    _cpu_sleep(130);
+    ESP_ERROR_CHECK(gpio_set_level(TFT_QSPI_RST, 1));
+    _cpu_sleep(300);
 
     return ESP_OK;
 }
@@ -174,8 +168,7 @@ static esp_err_t panel_axs15231b_reset()
 void axs15231_init(void)
 {
     _axs15231_init_pins();
-
-    panel_axs15231b_reset();
+    _axs15231_hardware_reset();
 
     esp_err_t ret;
 
