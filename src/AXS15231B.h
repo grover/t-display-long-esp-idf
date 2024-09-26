@@ -4,9 +4,6 @@
 #include "pins_config.h"
 #include "lvgl.h"/* https://github.com/lvgl/lvgl.git */
 
-#define LCD_SPI_DMA 
-#define AX15231B
-
 #define TFT_MADCTL 0x36
 #define TFT_MAD_MY 0x80
 #define TFT_MAD_MX 0x40
@@ -15,12 +12,6 @@
 #define TFT_MAD_BGR 0x08
 #define TFT_MAD_MH 0x04
 #define TFT_MAD_RGB 0x00
-
-#define TFT_INVOFF 0x20
-#define TFT_INVON 0x21
-
-// #define TFT_CS_H digitalWrite(TFT_QSPI_CS, 1);
-// #define TFT_CS_L digitalWrite(TFT_QSPI_CS, 0);
 
 #define TFT_CS_H gpio_set_level((gpio_num_t)TFT_QSPI_CS, 1);
 #define TFT_CS_L gpio_set_level((gpio_num_t)TFT_QSPI_CS, 0);

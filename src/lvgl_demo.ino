@@ -46,21 +46,14 @@ void my_disp_flush(lv_disp_drv_t *disp, const lv_area_t *area,
     uint32_t w = (area->x2 - area->x1 + 1);
     uint32_t h = (area->y2 - area->y1 + 1);
 
-    #ifdef LCD_SPI_DMA
-        char i = 0;
-		while (get_lcd_spi_dma_write())
+    char i = 0;
+    while (get_lcd_spi_dma_write())
 		{
 			i = i >> 1;
 			lcd_PushColors(0, 0, 0, 0, NULL);
 		}
-    #endif
-      lcd_PushColors(area->x1, area->y1, w, h, (uint16_t *)&color_p->full);
-
-    #ifdef LCD_SPI_DMA
-
-    #else
-        lv_disp_flush_ready(disp);
-    #endif
+    
+    lcd_PushColors(area->x1, area->y1, w, h, (uint16_t *)&color_p->full);
 }
 
 uint8_t read_touchpad_cmd[11] = {0xb5, 0xab, 0xa5, 0x5a, 0x0, 0x0, 0x0, 0x8};
