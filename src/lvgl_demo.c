@@ -4,7 +4,7 @@
 #include "backlight.h"
 #include "axs_touch.h"
 
-#include <FreeRTOS.h>
+#include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <esp_log.h>
 
@@ -57,7 +57,7 @@ void my_touchpad_read(lv_indev_drv_t *indev_driver, lv_indev_data_t *data) {
         if(ui_cartext != NULL)
         lv_label_set_text(ui_cartext, buf);
 
-        ESP_LOGI(TAG, buf);
+        ESP_LOGI(TAG, "%s", buf);
     }
     else {
         data->state = LV_INDEV_STATE_REL;
@@ -112,7 +112,7 @@ void setup() {
     buf = (lv_color_t *)heap_caps_malloc(buffer_size, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
     if (buf == NULL) {
       while (1) {
-        ESP_LOGE(TAG, "Failed to allocate first display buffer");
+        ESP_LOGE(TAG, "Failed to allocate first display buffer of size %d", buffer_size);
         vTaskDelay(500 / portTICK_PERIOD_MS);
       }
     }
@@ -120,7 +120,7 @@ void setup() {
     buf1 = (lv_color_t *)heap_caps_malloc(buffer_size, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
     if (buf1 == NULL) {
       while (1) {
-        ESP_LOGE(TAG, "Failed to allocate second display buffer");
+        ESP_LOGE(TAG, "Failed to allocate second display buffer of size %d", buffer_size);
         vTaskDelay(500 / portTICK_PERIOD_MS);
       }
     }
@@ -168,3 +168,10 @@ void loop() {
     }
 }
 
+void app_main() {
+  setup();
+
+  while (1) {
+    loop();
+  }
+}

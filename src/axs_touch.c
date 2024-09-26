@@ -9,7 +9,7 @@
 #include <esp_log.h>
 #include <esp_check.h>
 
-#include <FreeRTOS.h>
+#include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 
 #include "axs_touch.h"
@@ -109,7 +109,7 @@ esp_err_t touch_read_input(touch_input_t *input) {
 
     uint8_t buff[20] = {0};
 
-    ESP_RETURN_ON_ERROR(i2c_master_write_read_device(port, address, read_touchpad_cmd, sizeof(read_touchpad_cmd), buff, 8, timeOutInMillis / portTICK_RATE_MS), TAG, "Failed to transact with touch driver");
+    ESP_RETURN_ON_ERROR(i2c_master_write_read_device(port, address, read_touchpad_cmd, sizeof(read_touchpad_cmd), buff, 8, timeOutInMillis / portTICK_PERIOD_MS), TAG, "Failed to transact with touch driver");
 
     input->gesture = AXS_GET_GESTURE_TYPE(buff);
     input->x = AXS_GET_POINT_X(buff,0);
