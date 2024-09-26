@@ -105,7 +105,7 @@ void _axs15231_init_pins() {
     ESP_ERROR_CHECK(gpio_config(&conf));
 }
 
-void _cpu_sleep(uint32_t sleepDurationInMilliseconds) {
+static void _cpu_sleep(uint32_t sleepDurationInMilliseconds) {
     vTaskDelay(sleepDurationInMilliseconds / portTICK_PERIOD_MS);
 }
 
