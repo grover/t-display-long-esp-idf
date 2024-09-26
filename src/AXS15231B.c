@@ -245,7 +245,7 @@ void lcd_PushColors(uint16_t x,
                         uint16_t *data)
     {
         static bool first_send = 1;
-        const uint16_t *p = (uint16_t *)data;
+        static uint16_t *p = NULL;
         static uint32_t transfer_num_old = 0;
 
         if(data != NULL && (width != 0) && (high != 0))
