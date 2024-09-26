@@ -1,5 +1,8 @@
 #include "lvgl.h"      /* https://github.com/lvgl/lvgl.git */
 #include "AXS15231B.h"
+
+#include "backlight.h"
+
 #include <Arduino.h>
 #include <Wire.h>
 
@@ -139,8 +142,8 @@ void setup() {
 
     Wire.begin(TOUCH_IICSDA, TOUCH_IICSCL);
 
-    pinMode(TFT_BL, OUTPUT);
-    digitalWrite(TFT_BL, HIGH);
+    backlight_init();
+    backlight_enable(true);
 
     axs15231_init();
 
