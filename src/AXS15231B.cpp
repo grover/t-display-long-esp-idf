@@ -1,7 +1,14 @@
 #include "AXS15231B.h"
 #include "SPI.h"
 #include "Arduino.h"
+
+#include "driver/gpio.h"
 #include "driver/spi_master.h"
+
+#include "esp_log.h"
+#include "esp_check.h"
+
+static const char *TAG = "lcd_panel.axs15231b";
 
 static volatile bool lcd_spi_dma_write = false;
 extern void my_print(const char *buf);
@@ -126,17 +133,43 @@ void lcd_send_data8(uint8_t dat) {
 	}
 }
 
+static esp_err_t esp_lcd_gpio_conf(int gpio_num) {
+    gpio_config_t io_conf = {
+        .pin_bit_mask = 1ULL << gpio_num,
+        .mode = GPIO_MODE_OUTPUT,
+    };
+
+    ESP_RETURN_ON_ERROR(gpio_config(&io_conf), TAG, "Failed to configure GPIO %d", gpio_num);
+    return ESP_OK;
+}
+
+
+static esp_err_t panel_axs15231b_reset()
+{
+    // axs15231b_panel_t *axs15231b = __containerof(panel, axs15231b_panel_t, base);
+    // esp_lcd_panel_io_handle_t io = axs15231b->io;
+
+    // perform hardware reset
+    // if (axs15231b->reset_gpio_num >= 0) {
+        gpio_set_level(TFT_QSPI_RST, 1);
+        vTaskDelay(pdMS_TO_TICKS(130));
+        gpio_set_level(TFT_QSPI_RST, 0);
+        vTaskDelay(pdMS_TO_TICKS(130));
+        gpio_set_level(TFT_QSPI_RST, 1);
+        vTaskDelay(pdMS_TO_TICKS(300));
+    // } else { // perform software reset
+    //     tx_param(axs15231b, io, LCD_CMD_SWRESET, NULL, 0);
+    //     vTaskDelay(pdMS_TO_TICKS(120)); // spec, wait at least 5m before sending new command
+    // }
+
+    return ESP_OK;
+}
 void axs15231_init(void)
 {
-    pinMode(TFT_QSPI_CS, OUTPUT);
-    pinMode(TFT_QSPI_RST, OUTPUT);
+    esp_lcd_gpio_conf(TFT_QSPI_CS);
+    esp_lcd_gpio_conf(TFT_QSPI_RST);
 
-    TFT_RES_H;
-    delay(130);
-    TFT_RES_L;
-    delay(130);
-    TFT_RES_H;
-    delay(300);
+    panel_axs15231b_reset();
 
     esp_err_t ret;
 

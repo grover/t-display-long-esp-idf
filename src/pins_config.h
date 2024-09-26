@@ -1,5 +1,7 @@
 #pragma once
 
+#include <driver/gpio.h>
+
 /***********************config*************************/
 #define LCD_USB_QSPI_DREVER   1
 
@@ -45,7 +47,7 @@
 #define TFT_QSPI_D1           18
 #define TFT_QSPI_D2           21
 #define TFT_QSPI_D3           14
-#define TFT_QSPI_RST          16
+static const gpio_num_t TFT_QSPI_RST = GPIO_NUM_16;// 16;
 #define TFT_BL                1
 
 

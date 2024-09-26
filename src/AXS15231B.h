@@ -24,12 +24,14 @@
 #define TFT_SDA_H digitalWrite(TFT_MOSI, 1);
 #define TFT_SDA_L digitalWrite(TFT_MOSI, 0);
 
-#define TFT_RES_H digitalWrite(TFT_QSPI_RST, 1);
-#define TFT_RES_L digitalWrite(TFT_QSPI_RST, 0);
 #define TFT_DC_H digitalWrite(TFT_DC, 1);
 #define TFT_DC_L digitalWrite(TFT_DC, 0);
-#define TFT_CS_H digitalWrite(TFT_QSPI_CS, 1);
-#define TFT_CS_L digitalWrite(TFT_QSPI_CS, 0);
+
+// #define TFT_CS_H digitalWrite(TFT_QSPI_CS, 1);
+// #define TFT_CS_L digitalWrite(TFT_QSPI_CS, 0);
+
+#define TFT_CS_H gpio_set_level((gpio_num_t)TFT_QSPI_CS, 1);
+#define TFT_CS_L gpio_set_level((gpio_num_t)TFT_QSPI_CS, 0);
 
 typedef struct
 {
